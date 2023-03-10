@@ -26,7 +26,15 @@ const io = socketIo(server);
 io.on('connection', (socket) => {
     socket.emit('message', "Welcome to chatCord")
     socket.broadcast.emit('message', 'A user has joined')
+
+    //listen for a disconnect event
     socket.on('disconnect', () => {
         io.emit('message', 'A user has left the chat');
+    })
+
+    //listen for the chatMessage
+    socket.on('message', (msg) => {
+       //emit that message to all clients
+       io.emit('message', msg) 
     })
 })

@@ -1,5 +1,8 @@
 const chatForm = document.getElementById('chat-form')
 const chatMessage = document.querySelector('.chat-messages')
+const room_name = document.getElementById('room-name');
+const ul = document.getElementById('users')
+// const { addUsersList } = require('../../utils/userNames');
 
 let socket = io();
 
@@ -15,6 +18,21 @@ socket.on('message', message => {
     addMessage(message);
     chatMessage.scrollTop = chatMessage.scrollHeight; //making the scrollTop to be the scrollHeight
 })
+
+socket.on('roomUsers', ({ room, users }) => {
+    room_name.innerText = room;
+
+    addUsersList(users)
+    
+})
+
+
+function addUsersList(users) {
+    ul.innerHTML = 
+    `
+    ${users.map(user => `<li>${user.username}</li>`).join(' ')}
+   `
+};
 
 const addMessage = function (msg) {
     const chatArea = document.querySelector('.chat-messages');

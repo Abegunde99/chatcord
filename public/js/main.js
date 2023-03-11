@@ -3,15 +3,17 @@ const chatMessage = document.querySelector('.chat-messages')
 
 let socket = io();
 
+
 const { username, room } = Qs.parse(location.search, {
     ignoreQueryPrefix: true
 })
 
 console.log(username, room);
+socket.emit('joinRoom', {username, room}) //emit username and room 
 
 socket.on('message', message => {
     addMessage(message);
-    chatMessage.scrollTop = chatMessage.scrollHeight;
+    chatMessage.scrollTop = chatMessage.scrollHeight; //making the scrollTop to be the scrollHeight
 })
 
 const addMessage = function (msg) {

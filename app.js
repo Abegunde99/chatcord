@@ -2,6 +2,7 @@ const express = require('express');
 const path = require('path');
 const socketIo = require('socket.io');
 const formatMessages = require('./utils/message');
+const {userJoin, getCurrentUser} = require('./utils/users');
 
 
 const app = express();
@@ -14,9 +15,6 @@ const PORT = process.env.PORT || 8080
 app.use(express.static(path.join(__dirname, 'public')));
 
 
-// app.get('/', (req, res) => {
-//     res.sendFile('index.html')
-// })
 
 const botName = "chatChod"
 
@@ -26,17 +24,29 @@ const server = app.listen(PORT, () => {
 const io = socketIo(server);
 
 io.on('connection', (socket) => {
-    socket.emit('message', formatMessages(botName,"Welcome to chatCord"))
-    socket.broadcast.emit('message', formatMessages(botName,'A user has joined'))
+    //listen for the joinRoom
+    socket.on("joinRoom", ({ username, room }) => {
+        const user = userJoin(socket.id, username, room);
+        console.log(user);
+        //join room
+        socket.join(user.room);
 
-    //listen for a disconnect event
-    socket.on('disconnect', () => {
-        io.emit('message', formatMessages(botName,'A user has left the chat'));
+        socket.emit('message', formatMessages(botName,"Welcome to chatCord")) 
+        socket.broadcast.to(user.room).emit('message', formatMessages(botName, `${user.username} has joined`)) 
+        
+        //listen for the chatMessage
+        socket.on('message', (msg) => {
+            //emit that message to all clients
+            io.to(user.room).emit('message', formatMessages(user.username, msg)) 
+        })
+
+        //listen for a disconnect event
+        socket.on('disconnect', () => {
+            io.to(user.room).emit('message', formatMessages(botName,`${user.username} has left the chat`));
+        })
     })
 
-    //listen for the chatMessage
-    socket.on('message', (msg) => {
-       //emit that message to all clients
-       io.emit('message', formatMessages('USER', msg)) 
-    })
+    
+
+
 })
